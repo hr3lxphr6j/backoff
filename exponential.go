@@ -152,3 +152,90 @@ func getRandomValueFromInterval(randomizationFactor, random float64, currentInte
 	// we want a 33% chance for selecting either 1, 2 or 3.
 	return time.Duration(minInterval + (random * (maxInterval - minInterval + 1)))
 }
+
+// ExponentialBackoffBuilder is builder of ExponentialBackoff.
+type ExponentialBackoffBuilder struct {
+	initialInterval     *time.Duration
+	maxInterval         *time.Duration
+	maxElapsedTime      *time.Duration
+	randomizationFactor *float64
+	multiplier          *float64
+	maxRetries          *uint64
+	clock               Clock
+}
+
+// NewExponentialBackoffBuilder return a new ExponentialBackoffBuilder.
+func NewExponentialBackoffBuilder() *ExponentialBackoffBuilder {
+	return &ExponentialBackoffBuilder{}
+}
+
+// InitialInterval set the initial interval.
+func (builder *ExponentialBackoffBuilder) InitialInterval(d time.Duration) *ExponentialBackoffBuilder {
+	builder.initialInterval = &d
+	return builder
+}
+
+// MaxInterval set the max interval.
+func (builder *ExponentialBackoffBuilder) MaxInterval(d time.Duration) *ExponentialBackoffBuilder {
+	builder.maxInterval = &d
+	return builder
+}
+
+// MaxElapsedTime set the max elapsed time.
+func (builder *ExponentialBackoffBuilder) MaxElapsedTime(d time.Duration) *ExponentialBackoffBuilder {
+	builder.maxElapsedTime = &d
+	return builder
+}
+
+// RandomizationFactor set the randomization factor.
+func (builder *ExponentialBackoffBuilder) RandomizationFactor(f float64) *ExponentialBackoffBuilder {
+	builder.randomizationFactor = &f
+	return builder
+}
+
+// Multiplier set the multiplier.
+func (builder *ExponentialBackoffBuilder) Multiplier(f float64) *ExponentialBackoffBuilder {
+	builder.multiplier = &f
+	return builder
+}
+
+// Clock set the clock.
+func (builder *ExponentialBackoffBuilder) Clock(c Clock) *ExponentialBackoffBuilder {
+	builder.clock = c
+	return builder
+}
+
+// MaxRetries set the max retries.
+func (builder *ExponentialBackoffBuilder) MaxRetries(i uint64) *ExponentialBackoffBuilder {
+	builder.maxRetries = &i
+	return builder
+}
+
+// Build will build a new BackOff instance.
+func (builder *ExponentialBackoffBuilder) Build() BackOff {
+	b := NewExponentialBackOff()
+	defer b.Reset()
+
+	if builder.initialInterval != nil {
+		b.InitialInterval = *builder.initialInterval
+	}
+	if builder.randomizationFactor != nil {
+		b.RandomizationFactor = *builder.randomizationFactor
+	}
+	if builder.multiplier != nil {
+		b.Multiplier = *builder.multiplier
+	}
+	if builder.maxInterval != nil {
+		b.MaxInterval = *builder.maxInterval
+	}
+	if builder.maxElapsedTime != nil {
+		b.MaxElapsedTime = *builder.maxElapsedTime
+	}
+	if builder.clock != nil {
+		b.Clock = builder.clock
+	}
+	if builder.maxRetries != nil {
+		return WithMaxRetries(b, *builder.maxRetries)
+	}
+	return b
+}
